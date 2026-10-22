@@ -1,0 +1,14 @@
+services:
+  - type: worker
+    name: discord-stream-watcher
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: TOKEN
+        sync: false
+      - key: SERVER_ID
+        sync: false
+      - key: VOICE_CHANNEL_ID
+        sync: false
