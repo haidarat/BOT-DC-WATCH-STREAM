@@ -1,4 +1,5 @@
 const { Client } = require('@trickstarcandina/discordjs-selfbot');
+const http = require('node:http');
 require('dotenv').config();
 
 const requiredEnvironmentVariables = ['TOKEN', 'SERVER_ID', 'VOICE_CHANNEL_ID'];
@@ -17,6 +18,7 @@ const client = new Client();
 
 const GUILD_ID = process.env.SERVER_ID;
 const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID;
+const PORT = Number(process.env.PORT) || 3000;
 
 const watchingUsers = new Map(); // userId -> StreamConnectionReadonly
 let voiceConnection = null;
@@ -24,6 +26,21 @@ let keepAliveInterval = null;
 let scanInterval = null;
 let summaryInterval = null;
 let isJoining = false;
+
+const healthServer = http.createServer((request, response) => {
+  if (request.method !== 'GET' || request.url !== '/ping') {
+    response.writeHead(404, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: 'Not found' }));
+    return;
+  }
+
+  response.writeHead(200, { 'Content-Type': 'application/json' });
+  response.end(JSON.stringify({ status: 'ok' }));
+});
+
+healthServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`[HTTP] Health endpoint listening on port ${PORT}`);
+});
 
 // ============ ERROR HANDLERS (silent non-critical errors) ============
 client.on('error', (err) => {
@@ -274,12 +291,13 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 // ============ SHUTDOWN ============
 function shutdown(signal) {
-  console.log('\n[BOT] 🛑 Shutting down...');
+  console.log(`\n[BOT] 🛑 Shutting down (${signal})...`);
   if (keepAliveInterval) clearInterval(keepAliveInterval);
   if (scanInterval) clearInterval(scanInterval);
   if (summaryInterval) clearInterval(summaryInterval);
   cleanupAllStreams();
   try { if (voiceConnection) voiceConnection.disconnect(); } catch (_) {}
+  healthServer.close();
   client.destroy();
   process.exit(0);
 }

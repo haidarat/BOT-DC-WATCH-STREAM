@@ -1,9 +1,11 @@
 services:
-  - type: worker
+  - type: web
     name: discord-stream-watcher
     runtime: node
+    plan: free
     buildCommand: npm ci
     startCommand: npm start
+    healthCheckPath: /ping
     autoDeploy: true
     envVars:
       - key: TOKEN

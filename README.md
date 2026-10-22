@@ -1,6 +1,6 @@
 # Discord Stream Watcher
 
-A Node.js background worker that joins a configured Discord voice channel and tracks active streams.
+A Node.js service that joins a configured Discord voice channel, tracks active streams, and exposes a health endpoint for uptime checks.
 
 ## Local setup
 
@@ -17,10 +17,10 @@ A Node.js background worker that joins a configured Discord voice channel and tr
 
 1. Create an empty GitHub repository and push this folder to it. Do not commit `.env`.
 2. In Render, select **New +** → **Blueprint**, then connect the GitHub repository.
-3. Render detects `render.yaml` and creates a Background Worker.
+3. Render detects `render.yaml` and creates a Web Service.
 4. Enter `TOKEN`, `SERVER_ID`, and `VOICE_CHANNEL_ID` when Render asks for environment values, then deploy.
 
-The worker does not expose an HTTP port. Its process must stay running, so it is configured as a Render Background Worker rather than a Web Service.
+Render uses `GET /ping` as its health check. After deployment, create a cron-job.org job that calls `https://YOUR-RENDER-SERVICE.onrender.com/ping` every 10–14 minutes. The endpoint returns `{"status":"ok"}`.
 
 ## Environment variables
 
@@ -29,6 +29,7 @@ The worker does not expose an HTTP port. Its process must stay running, so it is
 | `TOKEN` | Yes | Discord account token used by the client. |
 | `SERVER_ID` | Yes | Discord server ID. |
 | `VOICE_CHANNEL_ID` | Yes | Voice-channel ID to join. |
+| `PORT` | No | HTTP port supplied automatically by Render. |
 
 Keep the token only in local `.env` and Render's encrypted environment settings. If it has ever been committed or shared, rotate it before deployment.
 
